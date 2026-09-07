@@ -65,3 +65,11 @@ Helm release 없이 관리하려면 `./scripts/quick-start.sh k8s init`, `k8s re
 전체 통계는 owner/admin에게만 제공하며 프로젝트별 사용자에게 공개하지 않습니다. Insights 보존 기간과 누적 통계 기간은 다를 수 있습니다. 상위 100개 워크플로만 API로 제공하며 누락을 0회로 표시하지 않습니다. 설치 전 월별 이력을 복원하지 않습니다.
 
 SQLite 볼륨에 수집 이력을 보존하며 현재 자동 삭제 정책은 없습니다. 용량을 관리하고 백업 시 수집기를 정지하거나 SQLite backup API를 사용하세요. Compose `down -v`와 PVC 수동 삭제는 이력을 삭제합니다. DB 소스가 바뀌면 새 볼륨을 사용해야 합니다.
+
+## 셸 설치기 사용 범위
+
+호스트 설치기는 Bash와 표준 Unix 명령, Docker Compose만 사용합니다. JSON/YAML 파싱은 하지 않으며 Docker의 기본 조회 템플릿으로 실행 중인 n8n의 비밀 아닌 설정만 읽습니다. 별도 Python·Node.js·jq·yq 설치나 Docker 소켓을 전달하는 설치 컨테이너는 필요 없습니다.
+
+간편 설치는 실행 중인 단일 n8n, 하나의 Docker 네트워크, 공개 포트 하나를 대상으로 합니다. 서비스명이 `n8n`이 아니면 `--service 이름`을 지정하세요. `--check`도 실행 중인 n8n이 필요합니다. 한 체크아웃에서 하나의 n8n 설치를 관리하며 설정 기록은 `.local/attach.env`, 추가 Compose는 `.local/compose.meter.yaml`에 보관합니다. 기록은 셸 코드로 실행하지 않습니다.
+
+이전 Python 설치기로 실제 적용한 환경은 이전 버전에서 제거한 뒤 새 셸 설치기를 적용하세요. 설치 이력을 임의로 섞지 않습니다. `scripts/verify-gateway.py`는 개발자가 사용하는 선택적 검증 도구이며 사용자 설치에는 호출되지 않습니다.

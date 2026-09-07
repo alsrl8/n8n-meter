@@ -14,4 +14,4 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: bash -n install.sh scripts/quick-start.sh
-      - run: python3 -m unittest discover -s test -p "*_test.py"
+      - run: bash test/install.test.sh

@@ -1,0 +1,56 @@
+# install.sh replaces only the validated n8n service name below.
+services:
+  N8N_SERVICE:
+    ports: !override []
+  n8nmeter:
+    build: ${METER_ROOT}
+    image: n8n-meter:0.1.0
+    restart: unless-stopped
+    environment:
+      N8N_METER_SOURCE_ID: ${METER_PROJECT}:${METER_SERVICE}
+      N8N_METER_SOURCE_LABEL: n8n
+      N8N_VERSION: "2.26.9"
+      N8N_METER_N8N_UPSTREAM: http://${METER_SERVICE}:${METER_N8N_PORT}
+      PGHOST: ${METER_DB_HOST}
+      PGPORT: ${METER_DB_PORT}
+      PGDATABASE: ${METER_DB_NAME}
+      PGUSER: ${METER_READER_USER}
+      PGSCHEMA: ${METER_DB_SCHEMA}
+      N8N_TABLE_PREFIX: ${METER_DB_PREFIX}
+      PGPASSWORD_FILE: /run/secrets/n8nmeter_reader
+    secrets: [n8nmeter_reader]
+    volumes: [n8nmeter_data:/data]
+    networks: [n8nmeter_existing]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:7810/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  n8nmeter-gateway:
+    build:
+      context: ${METER_ROOT}
+      dockerfile: gateway/Dockerfile
+    image: n8n-meter-gateway:0.1.0
+    restart: unless-stopped
+    ports: ["${METER_BINDING}"]
+    environment:
+      N8N_UPSTREAM: http://${METER_SERVICE}:${METER_N8N_PORT}
+      N8N_METER_UPSTREAM: http://n8nmeter:7810
+    networks: [n8nmeter_existing]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/healthz]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+networks:
+  n8nmeter_existing:
+    external: true
+    name: ${METER_NETWORK}
+volumes:
+  n8nmeter_data: {}
+secrets:
+  n8nmeter_reader:
+    file: ${METER_READER_SECRET}
