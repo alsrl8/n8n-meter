@@ -18,7 +18,9 @@ n8n Meter depends on internal n8n UI and database structures. An n8n upgrade can
 4. Open the actual authenticated workflow list through the gateway. Verify all visible rows have an always-visible usage button, with no hover needed. Capture a screenshot only with non-sensitive workflow names.
 5. Verify pagination, filtering, folders/projects, SPA navigation, identical workflow names with different IDs, unknown statistics, keyboard access, mobile bounds, and row-menu behavior.
 6. Compare one known workflow against read-only source statistics. Validate stale/error states. Do not execute customer workflows solely for tests without authorization.
-7. Verify unauthenticated gateway and statistics requests return 401, authenticated page loads, WebSocket connection works, and original n8n/webhook paths still work directly.
+7. Verify the original n8n sign-in page remains accessible, unauthenticated statistics return 401 and non-admin/MFA-pending users cannot read statistics, WebSocket connection works, and original n8n/webhook paths still work directly.
 8. Verify deployment rendering, readiness, previous-image rollback and SQLite preservation. Mark CI, local container runtime and actual cluster rollout separately.
 
 For SSO, CSP, subpath installations or a different n8n version, record the unverified boundary. Do not disable n8n security headers or claim compatibility from a fixture alone. If an adapter fails, use the original n8n address and leave metrics unavailable rather than inventing counts.
+
+The simplified installer depends on n8n 2.26.9 `/rest/login` returning role, mfaEnabled and mfaAuthenticated. Authentication lookup must fail closed. Check same-port Compose migration and rollback before expanding the automatic installation support matrix.

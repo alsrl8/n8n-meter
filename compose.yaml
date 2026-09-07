@@ -5,7 +5,7 @@ services:
     image: n8n-meter:0.1.0
     restart: unless-stopped
     environment:
-      N8N_METER_PASSWORD_FILE: /run/secrets/auth_password
+      N8N_METER_N8N_UPSTREAM: ${N8N_UPSTREAM:?Set existing n8n internal URL}
       N8N_METER_SOURCE_ID: ${N8N_METER_SOURCE_ID:?Set a stable source ID}
       N8N_METER_SOURCE_LABEL: ${N8N_METER_SOURCE_LABEL:-Local n8n}
       N8N_METER_INTERVAL_SECONDS: ${N8N_METER_INTERVAL_SECONDS:-60}
@@ -19,7 +19,6 @@ services:
       N8N_TABLE_PREFIX: ${N8N_TABLE_PREFIX:-}
     secrets:
       - db_password
-      - auth_password
     volumes:
       - data:/data
     networks:
@@ -49,8 +48,6 @@ services:
     networks: [n8n]
     security_opt: [no-new-privileges:true]
 secrets:
-  auth_password:
-    file: ${N8N_METER_AUTH_PASSWORD_FILE:?Set operator password file}
   db_password:
     file: ${N8N_METER_DB_PASSWORD_FILE:?Set DB password file}
 volumes:

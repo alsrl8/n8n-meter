@@ -1,18 +1,7 @@
 map $http_upgrade $connection_upgrade { default upgrade; '' close; }
 server {
   listen 8080;
-  # Dedicated operator entry point: n8n Meter authentication is additional to n8n login.
-  auth_request /_n8nmeter_auth;
-  location = /_n8nmeter_auth {
-    internal;
-    auth_request off;
-    proxy_pass ${N8N_METER_UPSTREAM}/;
-    proxy_pass_request_body off;
-    proxy_set_header Content-Length "";
-    proxy_set_header Authorization $http_authorization;
-  }
   location = /__n8nmeter/healthz {
-    auth_request off;
     access_log off;
     return 200 'ok';
   }
@@ -23,7 +12,7 @@ server {
   }
   location = /__n8nmeter/api/summary {
     proxy_pass ${N8N_METER_UPSTREAM}/api/summary;
-    proxy_set_header Authorization $http_authorization;
+    proxy_set_header Cookie $http_cookie;
   }
   location /__n8nmeter/ { return 404; }
   location / {
@@ -34,8 +23,6 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
-    # Do not forward the operator gateway's Basic credentials to n8n.
-    proxy_set_header Authorization "";
     proxy_set_header Accept-Encoding "";
     proxy_buffering off;
     sub_filter_once on;
