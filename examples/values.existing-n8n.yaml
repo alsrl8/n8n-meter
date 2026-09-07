@@ -1,0 +1,22 @@
+# Build/push both images to YOUR registry, then replace these image references.
+image:
+  repository: registry.example.com/n8n-meter
+  tag: "0.1.0"
+source:
+  id: my-n8n
+  label: My n8n
+  n8nVersion: "2.26.9"
+gateway:
+  image:
+    repository: registry.example.com/n8n-meter-gateway
+    tag: "0.1.0"
+  n8nUpstream: http://n8n:5678
+database:
+  host: postgres
+  name: n8n
+  user: n8nmeter_reader
+  existingSecret: n8nmeter-db-reader
+  passwordKey: password
+auth:
+  existingSecret: n8nmeter-operator
+  passwordKey: password

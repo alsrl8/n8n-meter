@@ -1,0 +1,61 @@
+name: n8n-meter
+services:
+  n8nmeter:
+    build: .
+    image: n8n-meter:0.1.0
+    restart: unless-stopped
+    environment:
+      N8N_METER_PASSWORD_FILE: /run/secrets/auth_password
+      N8N_METER_SOURCE_ID: ${N8N_METER_SOURCE_ID:?Set a stable source ID}
+      N8N_METER_SOURCE_LABEL: ${N8N_METER_SOURCE_LABEL:-Local n8n}
+      N8N_METER_INTERVAL_SECONDS: ${N8N_METER_INTERVAL_SECONDS:-60}
+      N8N_VERSION: ${N8N_VERSION:-unknown}
+      PGHOST: ${PGHOST:?Set DB host}
+      PGPORT: ${PGPORT:-5432}
+      PGDATABASE: ${PGDATABASE:?Set DB name}
+      PGUSER: ${PGUSER:-n8nmeter_reader}
+      PGPASSWORD_FILE: /run/secrets/db_password
+      PGSCHEMA: ${PGSCHEMA:-public}
+      N8N_TABLE_PREFIX: ${N8N_TABLE_PREFIX:-}
+    secrets:
+      - db_password
+      - auth_password
+    volumes:
+      - data:/data
+    networks:
+      - n8n
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:7810/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    image: n8n-meter-gateway:0.1.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${N8N_METER_PORT:-7812}:8080"
+    environment:
+      N8N_UPSTREAM: ${N8N_UPSTREAM:?Set existing n8n internal URL}
+      N8N_METER_UPSTREAM: http://n8nmeter:7810
+    depends_on:
+      n8nmeter:
+        condition: service_healthy
+    networks: [n8n]
+    security_opt: [no-new-privileges:true]
+secrets:
+  auth_password:
+    file: ${N8N_METER_AUTH_PASSWORD_FILE:?Set operator password file}
+  db_password:
+    file: ${N8N_METER_DB_PASSWORD_FILE:?Set DB password file}
+volumes:
+  data:
+networks:
+  n8n:
+    external: true
+    name: ${N8N_NETWORK:?Set existing n8n network}

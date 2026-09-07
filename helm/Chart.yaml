@@ -1,0 +1,6 @@
+apiVersion: v2
+name: n8n-meter
+description: n8n source statistics collector and operator UI gateway
+type: application
+version: 0.1.0
+appVersion: 0.1.0

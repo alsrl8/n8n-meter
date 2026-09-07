@@ -1,0 +1,46 @@
+image:
+  repository: n8n-meter
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+source:
+  id: ""
+  label: n8n
+  n8nVersion: "unknown"
+  intervalSeconds: 60
+database:
+  host: ""
+  port: 5432
+  name: n8n
+  user: n8nmeter_reader
+  schema: public
+  tablePrefix: ""
+  existingSecret: ""
+  passwordKey: password
+  caSecret: ""
+  caKey: ca.crt
+auth:
+  existingSecret: ""
+  passwordKey: password
+persistence:
+  size: 1Gi
+  storageClassName: ""
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+gateway:
+  image:
+    repository: n8n-meter-gateway
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  n8nUpstream: ""
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi

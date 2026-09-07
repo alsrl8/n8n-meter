@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "n8n Meter for n8n",
+  "version": "0.1.0",
+  "description": "n8n 화면 위에서 라이선스 전송 원천 통계와 집계 도움말을 확인합니다. 로컬 PoC 전용.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "n8n Meter 사용량 패널 열기", "default_popup": "popup.html"}
+}

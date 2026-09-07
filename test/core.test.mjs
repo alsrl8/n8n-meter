@@ -1,0 +1,12 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { totals, difference, identifier } from '../core.mjs';
+const row=(id,count,rootCount=count)=>({id,name:'production_error',workflowId:'a',count:String(count),rootCount:String(rootCount)});
+test('sums failed runs and distinguishes non-root without losing bigint precision',()=>assert.deepEqual(totals([row('1','9007199254740993','2'),row('2',4,3)]),{production:'9007199254740997',root:'5',nonRoot:'9007199254740992'}));
+test('initial observation is not a historical usage estimate',()=>assert.equal(difference(null,[row('1',7)]).root,null));
+test('new rows and increments count in the observed interval',()=>assert.deepEqual(difference([row('1',7)],[row('1',9),row('2',3,1)]),{state:'observed',production:'5',root:'3'}));
+test('deletion is detected even if aggregate grew',()=>assert.equal(difference([row('1',10)],[row('2',100)]).state,'discontinuity'));
+test('individual reset is detected even if another row grew',()=>assert.equal(difference([row('1',10),row('2',1)],[row('1',2),row('2',50)]).state,'discontinuity'));
+test('no observed executions means zero, not unavailable',()=>assert.equal(difference([row('1',7)],[row('1',7)]).root,'0'));
+test('root count cannot exceed total',()=>assert.throws(()=>totals([row('1',2,3)])));
+test('schema and prefix cannot inject SQL',()=>{assert.throws(()=>identifier('public; DROP TABLE x'));assert.equal(identifier('n8n_workflow_statistics'),'"n8n_workflow_statistics"');});
