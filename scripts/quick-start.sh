@@ -24,7 +24,7 @@ if [[ "$mode" == compose ]]; then
   if [[ "$action" == init ]]; then
     [[ ! -e "$config" ]] || fail "Already exists: $config (not overwritten)"
     cp .env.example "$config"
-    echo "Edit $config: existing network, n8n upstream, DB reader settings, and local secret file paths."
+    echo "Edit $config: existing network, n8n upstream, DB reader settings, and the existing reader secret file path. No extra login is needed."
     exit 0
   fi
   [[ -f "$config" ]] || fail "Run $0 compose init first."

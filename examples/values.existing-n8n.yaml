@@ -17,6 +17,3 @@ database:
   user: n8nmeter_reader
   existingSecret: n8nmeter-db-reader
   passwordKey: password
-auth:
-  existingSecret: n8nmeter-operator
-  passwordKey: password

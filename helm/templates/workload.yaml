@@ -76,8 +76,8 @@ spec:
               value: {{ .Values.database.tablePrefix | quote }}
             - name: PGPASSWORD_FILE
               value: /run/secrets/db/password
-            - name: N8N_METER_PASSWORD_FILE
-              value: /run/secrets/auth/password
+            - name: N8N_METER_N8N_UPSTREAM
+              value: {{ required "gateway.n8nUpstream is required" .Values.gateway.n8nUpstream | quote }}
             {{- if .Values.database.caSecret }}
             - name: PGSSLROOTCERT
               value: /run/secrets/ca/ca.crt
@@ -87,9 +87,6 @@ spec:
               mountPath: /data
             - name: db
               mountPath: /run/secrets/db
-              readOnly: true
-            - name: auth
-              mountPath: /run/secrets/auth
               readOnly: true
             {{- if .Values.database.caSecret }}
             - name: ca
@@ -151,12 +148,6 @@ spec:
             secretName: {{ required "database.existingSecret is required" .Values.database.existingSecret }}
             items:
               - key: {{ .Values.database.passwordKey }}
-                path: password
-        - name: auth
-          secret:
-            secretName: {{ required "auth.existingSecret is required" .Values.auth.existingSecret }}
-            items:
-              - key: {{ .Values.auth.passwordKey }}
                 path: password
         {{- if .Values.database.caSecret }}
         - name: ca

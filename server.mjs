@@ -3,13 +3,15 @@ import { readFileSync, mkdirSync } from 'node:fs';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import pg from 'pg';
+import { sessionAuthenticator } from './session-auth.mjs';
 import { totals, difference, identifier } from './core.mjs';
 
 const env = process.env;
 const fileSecret = (key) => env[key + '_FILE'] ? readFileSync(env[key + '_FILE'], 'utf8').trim() : env[key];
 const password = fileSecret('N8N_METER_PASSWORD');
 const snapshotFile = env.N8N_METER_SNAPSHOT_FILE;
-if (!password && env.N8N_METER_LOCAL_ONLY !== 'true') throw new Error('N8N_METER_PASSWORD_FILE required outside loopback-only Compose mode');
+const authenticateSession = env.N8N_METER_N8N_UPSTREAM ? sessionAuthenticator(env.N8N_METER_N8N_UPSTREAM) : null;
+if (!authenticateSession && !password && env.N8N_METER_LOCAL_ONLY !== 'true') throw new Error('N8N_METER_PASSWORD_FILE required outside loopback-only Compose mode');
 const directory = env.N8N_METER_DATA_DIR || '/data';
 mkdirSync(directory, { recursive: true });
 const db = new DatabaseSync(directory + '/n8nmeter.sqlite');
@@ -111,7 +113,7 @@ function summary() {
 }
 const authHash = value => createHash('sha256').update(value).digest();
 const expectedAuth = password ? authHash('Basic ' + Buffer.from('n8nmeter:' + password).toString('base64')) : null;
-const server = http.createServer((req,res) => {
+const server = http.createServer(async (req,res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Referrer-Policy', 'no-referrer');
@@ -121,7 +123,11 @@ const server = http.createServer((req,res) => {
   if (path === '/favicon.ico') { res.writeHead(204); return res.end(); }
   if (path === '/healthz') { res.writeHead(200); return res.end('ok'); }
   if (path === '/readyz') { const s = summary(); res.writeHead(s.last && !s.error && !s.stale ? 200 : 503); return res.end(s.last && !s.error && !s.stale ? 'ready' : 'not ready'); }
-  if (expectedAuth && !timingSafeEqual(authHash(req.headers.authorization || ''), expectedAuth)) {
+  if (authenticateSession) {
+    const status = await authenticateSession(req.headers.cookie);
+    if (status !== 200) {res.writeHead(status); return res.end(status === 401 ? 'Sign in to n8n' : status === 403 ? 'n8n administrator session required' : 'n8n session verification unavailable');}
+  }
+  if (!authenticateSession && expectedAuth && !timingSafeEqual(authHash(req.headers.authorization || ''), expectedAuth)) {
     res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="n8n Meter", charset="UTF-8"' }); return res.end('Authentication required');
   }
   if (path === '/api/summary') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(summary())); }

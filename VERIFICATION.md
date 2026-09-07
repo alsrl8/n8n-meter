@@ -11,3 +11,11 @@ Initial source publication, 2026-09-07.
 Not verified: real continuous DB collection with a dedicated reader, authenticated n8n through the packaged gateway, TLS/SSO/WebSocket integration, actual Kubernetes rollout, public image distribution or final billing reconciliation. Synthetic fixtures and Helm rendering do not establish those outcomes. CI status must be read from the repository checks.
 
 Run the upgrade checks in [COMPATIBILITY.md](COMPATIBILITY.md) before claiming support for an n8n version.
+
+## Simplified installation work
+
+- Added `install.sh`: five progress stages, elapsed-time messages, readable plan, unchanged source Compose, same-port override, preflight reader check before n8n recreation, status and removal, and recovery on connection failure. Automatic support is limited to a single Compose file, n8n 2.26.9, PostgreSQL, root HTTP and one published port.
+- Gateway no longer requires an additional login. Collector verifies existing n8n `/rest/login` sessions for global owner/admin, including MFA completion. Source response semantics inspected in the deployed 2.26.9 auth controller and user service.
+- README now has a compact quick-start and Mermaid architecture diagram; advanced database/Helm details moved out of the primary flow.
+- Passed: 10 Node core/HTTP/session tests; Python installer plan/rejection/recovery tests; real Docker Compose merge validation with a synthetic configuration (same host port, no original n8n host binding, no copied password); Helm lint/render; isolated gateway/collector synthetic-session integration.
+- Not executed: installer apply/remove against a real n8n deployment, real dedicated-reader collection, real administrator browser session through the new gateway, cluster rollout or TLS/SSO/WebSocket validation. The current 7811 snapshot PoC was not restarted by this change.
